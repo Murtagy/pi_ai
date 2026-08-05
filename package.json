@@ -1,0 +1,30 @@
+{
+  "name": "pi_ai",
+  "version": "0.1.0",
+  "description": "Pi extensions for Git branch session resumption and ChatGPT/Codex plan status",
+  "type": "module",
+  "author": "Maksim R",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Murtagy/pi_ai.git"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "pi-coding-agent",
+    "codex",
+    "git"
+  ],
+  "files": [
+    "extensions"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions/branch-resume/index.ts",
+      "./extensions/codex-status.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  }
+}
