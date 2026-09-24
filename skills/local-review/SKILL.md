@@ -23,4 +23,4 @@ Use this workflow for local code changes that need Plannotator review.
 5. Local plan and QA files may be committed to the branch to make review decisions visible. Do not push these files to the remote.
 6. Open next review session or proceed to further instructions.
 
-While Plannotator is involved, conduct subsequent review discussion through Plannotator. Do not open a verdict-approval gate.
+While Plannotator is involved, conduct subsequent review discussion through Plannotator.
