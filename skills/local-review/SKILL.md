@@ -23,6 +23,9 @@ Use this workflow for local code changes that need Plannotator review.
 5. Local plan and QA files may be committed to the branch to make review decisions visible. Do not push these files to the remote.
 6. Open next review session or proceed to further instructions.
 
+
+Keep the plan assertive - what we do, rather that what we don't do. The architectural choises (of not doing something) can we written in a separate section.
+
 While Plannotator is involved, conduct subsequent review discussion through Plannotator.
 
 ## Wait for review in Pi
@@ -39,4 +42,6 @@ Launch each interactive Plannotator `review` or `annotate` in a foreground Bash 
 
 Review plan and QA incrementally: after first presentation, show only changes since the last acknowledged round. Review code against explicit per-file acceptance of the presented content. Previously shown does not mean accepted. Unchanged accepted files stay out of subsequent rounds; changed files return for review. Keep full context available on request.
 
-Update existing `plan.md` when goals, scope, approach, or invariants change. Record new questions and decisions concisely in existing `qa.md`, usually one sentence per item. For mechanical edits, leave plan unchanged and present code diff, adding a brief QA answer when needed. Reuse stable document paths; present actual document changes since last acknowledged round. Keep validation logs and session bookkeeping outside review documents.
+Update existing `plan.md` when goals, scope, approach, or invariants change. Record new questions and decisions concisely in existing `qa.md`, usually one sentence per item. For mechanical edits, leave plan unchanged and present code diff, adding a brief QA answer when needed. Reuse stable document paths; present actual document changes since last acknowledged round. Keep validation logs and session bookkeeping outside review documents. When changing the plan - present the changes to it for review, unless there is a clear small change to the plan as a part of plan.md, not as a separate file.
+
+Before opening each review, verify its actual contents include all new answers, verdicts, and plan changes since the last acknowledged document review. Present these as document deltas alongside code, or through a consecutive document review. Advance the document baseline only for versions actually presented in a submitted review; retain unpresented changes for the next round.

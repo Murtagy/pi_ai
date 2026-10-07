@@ -1,0 +1,16 @@
+{
+  "reviewAnalysis": {
+    "semanticDiff": true,
+    "callFlow": false
+  },
+  "theme": {
+    "mode": "light",
+    "light": "plannotator",
+    "dark": "plannotator"
+  },
+  "prompts": {
+    "review": {
+      "denied": "\n\nTreat the findings above as review input. Inspect every finding against the actual code; do not assume feedback is correct at all times. For each finding, give a clear verdict with concise code evidence. Say whether it was introduced by the current changes, was pre-existing, or reflects deliberate scope.\n\nReview only the incoming findings. Do not independently review the rest of the diff or search for issues that were not submitted.\n\nAfter reporting verdicts, address confirmed findings (make changes) and report what changed. Ask about genuine ambiguity only."
+    }
+  }
+}
