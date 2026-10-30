@@ -16,6 +16,7 @@ For Python work, read [references/python.md](references/python.md) before procee
 - Implement requested behavior at the responsible layer. Preserve unrelated behavior and contracts; separate independent cleanup or redesign.
 - Prefer immutable objects, early returns, composition over inheritance, and boring code over clever code. Fail fast; use CQRS method names that distinguish queries from commands.
 - Name things by their domain meaning and actual behavior. Comments explain current contracts, surprising constraints, and why a simpler-looking alternative would be wrong. Do not narrate change progress.
+- Comments belong where behavior is enforced; helper comments must not describe caller workflow.
 
 ## Functional Core, Imperative Shell
 

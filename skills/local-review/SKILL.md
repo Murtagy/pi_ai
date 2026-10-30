@@ -10,17 +10,20 @@ Use this workflow for local code changes that need Plannotator review.
 ## Before implementation
 
 1. Explore the codebase and understand the request.
-2. Ensure work is on a new branch before changing files.
+2. Use explicitly requested branch/worktree; otherwise create a new branch before editing.
 3. For unresolved design decisions or multiple architectural options, explore options and write a plan for review before implementing. Keep the plan under `local/docs/<feature-slug>/plan.md`.
 4. For clear changes, including mechanical moves, implement directly regardless of diff size.
 
 ## Review
 
 1. Stage the intended changes and open a Plannotator review.
-2. Treat a submitted Plannotator review as authorization to act on clear feedback. Validate each finding against the code; do not assume findings are correct.
+2. Use the review's `decision` field:
+   - `annotated`: address submitted feedback. Validate bug claims against the code; do not assume findings are correct.
+   - `approved`: continue the agreed next step; notes are non-blocking.
+   - `dismissed`: no approval granted.
 3. During an active review, implement clear requested revisions before presenting the next code review. Use plan-first review for unresolved design decisions, not mechanical moves or diff size alone. When one item needs clarification, ask a focused question and continue independent, actionable items.
 4. Record important decisions in `local/docs/<feature-slug>/plan.md`. Record user questions and answers in `local/docs/<feature-slug>/qa.md`. Report verdicts and answers in `qa.md`.
-5. Local plan and QA files may be committed to the branch to make review decisions visible. Do not push these files to the remote.
+5. Keep plan/QA local. Stage for review when needed; unstage before code commits. Publish only when explicitly requested.
 6. Open next review session or proceed to further instructions.
 
 
