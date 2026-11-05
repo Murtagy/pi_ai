@@ -19,14 +19,19 @@
   "files": [
     "extensions"
   ],
+  "scripts": {
+    "test:branch-review": "node --test extensions/branch-review/*.test.*"
+  },
   "pi": {
     "extensions": [
       "./extensions/branch-resume/index.ts",
       "./extensions/codex-status.ts",
-      "./extensions/effort.ts"
+      "./extensions/effort.ts",
+      "./extensions/branch-review/index.ts"
     ]
   },
   "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
     "@earendil-works/pi-coding-agent": "*"
   }
 }
