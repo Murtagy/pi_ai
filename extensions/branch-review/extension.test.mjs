@@ -120,20 +120,22 @@ test("agent tool accepts instructions only and caller cannot continue until revi
   await writeFile(f.release, "continue");
   const result = await pending;
   assert.match(result.content[0].text, /Independent findings/);
-  assert.deepEqual(result.details.reviews.map(review => review.name), ["astra", "opus"]);
+  assert.deepEqual(result.details.reviews.map(({ name, focus }) => `${name}/${focus}`),
+    ["astra/bugs", "astra/design", "opus/bugs", "opus/design"]);
   assert.ok(result.details.reviews.every(review => review.result));
   assert.equal(f.messages.length, 0);
 });
 
 for (const selection of [{ reviewers: ["astra"] }, { reviewers: ["opus"] }, { model: "fixture" }]) {
-  test(`explicit single reviewer stays single: ${JSON.stringify(selection)}`, { timeout: 20000 }, async (t) => {
+  test(`explicit single model runs both focuses: ${JSON.stringify(selection)}`, { timeout: 20000 }, async (t) => {
     const f = await fixture(t);
     await writeFile(f.release, "continue");
     const result = await f.extension.tools.get("request_review").definition.execute("single", {
       instructions: "Review current branch", ...selection,
     }, undefined, undefined, f.ctx);
-    assert.deepEqual(result.details.reviews.map(review => review.name), selection.reviewers ?? ["astra"]);
-    assert.ok(result.details.reviews[0].result);
+    assert.deepEqual(result.details.reviews.map(({ name, focus }) => `${name}/${focus}`),
+      (selection.reviewers ?? ["astra"]).flatMap(name => [`${name}/bugs`, `${name}/design`]));
+    assert.ok(result.details.reviews.every(review => review.result));
   });
 }
 
@@ -150,7 +152,7 @@ test("blocking slash command remains cancellable and emits no successful report 
 });
 
 for (const outcome of ["success", "failure", "cancel", "default"]) {
-  test(`named reviewers run concurrently with independent processes and identical instructions: ${outcome}`, { timeout: 20000 }, async (t) => {
+  test(`models run independent bugs/design reviews concurrently: ${outcome}`, { timeout: 20000 }, async (t) => {
     const f = await fixture(t);
     const config = JSON.parse(await readFile(f.configPath, "utf8"));
     const reviewers = Object.fromEntries(["astra", "opus"].map(name => [name, {
@@ -160,11 +162,12 @@ for (const outcome of ["success", "failure", "cancel", "default"]) {
         let prompt = '';
         process.stdin.on('data', text => prompt += text);
         process.stdin.on('end', () => {
-          fs.writeFileSync(${JSON.stringify(f.ready)} + '-${name}', JSON.stringify({ cwd: process.cwd(), pid: process.pid, prompt }));
+          const focus = prompt.includes('Focus: design.') ? 'design' : 'bugs';
+          fs.writeFileSync(${JSON.stringify(f.ready)} + '-${name}-' + focus, JSON.stringify({ cwd: process.cwd(), pid: process.pid, prompt, focus }));
           const timer = setInterval(() => {
             if (fs.existsSync(${JSON.stringify(f.release)})) {
               clearInterval(timer);
-              if (${JSON.stringify(outcome)} === 'failure' && '${name}' === 'opus') process.exit(4);
+              if (${JSON.stringify(outcome)} === 'failure' && '${name}' === 'opus' && focus === 'design') process.exit(4);
               console.log('${name} findings');
             }
           }, 10);
@@ -177,27 +180,40 @@ for (const outcome of ["success", "failure", "cancel", "default"]) {
     // Attach rejection handler immediately for cancellation.
     const settled = pending.then(result => ({ result }), error => ({ error }));
     const paths = [];
-    for (const name of ["astra", "opus"]) {
+    for (const name of ["astra-bugs", "astra-design", "opus-bugs", "opus-design"]) {
       for (let i = 0; i < 400; i++) {
         try { paths.push(await readFile(`${f.ready}-${name}`, "utf8")); break; }
         catch (error) { if (error.code !== "ENOENT") throw error; }
         await new Promise(resolve => setTimeout(resolve, 25));
       }
     }
-    assert.equal(paths.length, 2, "both processes start before either is released");
-    const [astra, opus] = paths.map(text => JSON.parse(text));
-    assert.notEqual(astra.pid, opus.pid);
-    assert.equal(astra.cwd, opus.cwd);
-    assert.equal(astra.prompt, opus.prompt);
+    assert.equal(paths.length, 4, "all four processes start before any is released");
+    const runs = paths.map(text => JSON.parse(text));
+    assert.equal(new Set(runs.map(run => run.pid)).size, 4);
+    assert.equal(new Set(runs.map(run => run.cwd)).size, 1);
+    assert.equal(runs[0].prompt, runs[2].prompt);
+    assert.equal(runs[1].prompt, runs[3].prompt);
+    assert.notEqual(runs[0].prompt, runs[1].prompt);
+    for (const run of runs) {
+      assert.ok(run.prompt.includes("Review current branch"));
+      assert.match(run.prompt, new RegExp(`Focus: ${run.focus}\\.`));
+      if (run.focus === "design") assert.match(run.prompt, /callers, compatibility, configuration, deployment, and cross-module assumptions/);
+    }
     if (outcome === "cancel") await f.extension.commands.get("review-cancel").handler("", f.ctx);
     else await writeFile(f.release, "continue");
     const completed = await settled;
     if (outcome === "cancel") assert.ok(completed.error);
     else {
       assert.match(completed.result.content[0].text, /astra findings/);
-      assert.match(completed.result.content[0].text, outcome === "failure" ? /opus\n\nFAILED/ : /opus findings/);
+      assert.match(completed.result.content[0].text, outcome === "failure" ? /opus\/design\n\nFAILED/ : /opus findings/);
       const results = completed.result.details.reviews.filter(review => review.result).map(review => review.result);
+      assert.equal(results.length, outcome === "failure" ? 3 : 4);
       assert.equal(new Set(results.map(result => result.cwd)).size, 1);
+      assert.equal(new Set(results.map(result => result.artifactDir)).size, results.length);
+      for (const review of completed.result.details.reviews.filter(review => review.result)) {
+        const metadata = JSON.parse(await readFile(join(review.result.artifactDir, "metadata.json"), "utf8"));
+        assert.equal(metadata.focus, review.focus);
+      }
     }
     const worktrees = execFileSync("git", ["worktree", "list", "--porcelain"], { cwd: f.ctx.cwd, encoding: "utf8" });
     assert.equal(worktrees.match(/^worktree /gm)?.length, 1);

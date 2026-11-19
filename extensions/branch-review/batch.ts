@@ -1,10 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { errorMessage, formatResult, loadConfig, parseConfig, runReview, type ReviewRequest, type ReviewResult } from "./review.ts";
+import { errorMessage, formatResult, loadConfig, parseConfig, runReview, type ReviewFocus, type ReviewRequest, type ReviewResult } from "./review.ts";
 
 export interface BatchResult {
   text: string;
-  reviews: { name: string; result?: ReviewResult; error?: string }[];
+  reviews: { name: string; focus: ReviewFocus; result?: ReviewResult; error?: string }[];
   usage?: ReviewResult["usage"];
 }
 
@@ -38,22 +38,23 @@ export async function runBatch(options: {
     if (name === "opus") return parseConfig({ harness: "claude", model: "opus", base: saved.base, timeoutSeconds: saved.timeoutSeconds });
     return loadConfig(agentDir, request);
   }));
-  const reviews = await Promise.all(names.map(async (name, index) => {
-    const progress = (text: string) => options.onProgress?.(`[${name}] ${text}`);
+  const runs = names.flatMap((name, index) => (["bugs", "design"] as const).map(focus => ({ name, index, focus })));
+  const reviews = await Promise.all(runs.map(async ({ name, index, focus }) => {
+    const progress = (text: string) => options.onProgress?.(`[${name}/${focus}] ${text}`);
     try {
       if (configs[index].harness === "claude" || configs[index].harness === "external") {
         progress("CLI permissions are not an OS read-only sandbox.");
       }
-      const result = await runReview({ ...options, config: configs[index], onProgress: progress });
+      const result = await runReview({ ...options, config: configs[index], focus, onProgress: progress });
       progress("Finished");
-      return { name, result };
+      return { name, focus, result };
     } catch (error) {
       progress(`Failed: ${errorMessage(error)}`);
-      return { name, error: errorMessage(error) };
+      return { name, focus, error: errorMessage(error) };
     }
   }));
   signal.throwIfAborted();
-  const text = reviews.map(review => `## ${review.name}\n\n${"result" in review ? formatResult(review.result) : `FAILED: ${review.error}`}`).join("\n\n");
+  const text = reviews.map(review => `## ${review.name}/${review.focus}\n\n${"result" in review ? formatResult(review.result) : `FAILED: ${review.error}`}`).join("\n\n");
   if (reviews.every(review => !("result" in review))) throw new Error(text);
   let usage: BatchResult["usage"];
   for (const review of reviews) {
