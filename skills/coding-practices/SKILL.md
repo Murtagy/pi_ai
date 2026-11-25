@@ -27,10 +27,22 @@ Separate business logic from I/O and side effects:
 
 Domain logic should be unit-testable without mocks. Do not extract pass-through functions solely to make tests easier; give each module meaningful behavior and ownership.
 
+## Docstr and comments
+
+Prefer assertive language. e.g. "We do X and Y".
+Negation should be avoided, such as:
+- X, never Y;
+- A without B;
+- Y, not Z;
+- Z, rather X;
+- T must not.
+Negation has less value to the reader, use of negation has to be justified by the context deliberatelly comparing the options or fixing a bug with clear sequence flow written out.
+
 ## Tests
 
 - Before adding a test, name the changed invariant and smallest useful public interface that exposes it. Extend existing focused tests; avoid re-proving unchanged plumbing.
 - Prefer testing the functional core with real data or stubs, without mocks. Mock only external I/O when needed.
+  - e.g. when there are calls expected to the client we test the presence of intent/command; e.g. built request, rather then sending of a request.
 - Assert observable behavior, not private calls, implementation details, or call counts alone. Tests must survive behavior-preserving refactors.
 - Broaden the test surface when the changed invariant spans orchestration or I/O; do not ignore that behavior merely because pure-core tests are simpler.
 - Cover significant behavior changes, not every unchanged retrieval, locking, or save step. Many mocks usually signal that the test surface is too broad or the design needs a better interface.

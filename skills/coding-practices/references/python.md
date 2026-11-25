@@ -14,3 +14,5 @@
 - Prefer exhaustive conditional branches and matches so new variants cannot silently fall through. Do not use `else` as a catch-all for non-binary alternatives.
 - When a function operates on one class of domain object, prefer a method on that class unless it clearly belongs at module level.
 - Prefer invalidating upstream rather than downstream.
+- Do not create a class with single public method.
+- Do not extract module constants when there is only one reference to it, keep it local to the code.

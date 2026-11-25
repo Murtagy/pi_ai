@@ -9,7 +9,8 @@ Read the relevant diff and any existing PR description before writing. Preserve 
 
 ## Content
 
-- Start with a tweet-sized description of the change.
+- Start with "Agentic code and the description below."
+- Next a tweet-sized description of the change.
 - Keep the implementation summary short: important details only, as bullets. Bold critical bullets.
 - Omit routine CI validation lists: type checking, linting, formatting, and unit-test runs.
 - Include dependencies only when present; omit the section otherwise.
@@ -33,8 +34,8 @@ Omit optional sections when they do not apply. Replace placeholders; do not leav
 ## Dependencies
 <Dependencies, if any>
 
-## Evidence
-<For bug fixes: concrete reproduction, before/after results, screenshots, or execution output>
+## Evidence (Only on PRs which contain only bug fixes)
+<Concrete reproduction, before/after results, screenshots, or execution output>
 
 Task - <link>
 ```
